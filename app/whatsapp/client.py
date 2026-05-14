@@ -80,6 +80,11 @@ class WhatsAppClient:
         Returns:
             True if successful, False otherwise
         """
+        # Demo mode: skip actual sending
+        if not self.settings.whatsapp_enabled:
+            logger.info(f"[DEMO MODE] Would send message to {jid}: {message[:50]}...")
+            return True
+        
         payload = {
             "number": jid.replace("@c.us", "").replace("@g.us", ""),
             "message": message,
@@ -148,6 +153,11 @@ class WhatsAppClient:
         Returns:
             True if successful
         """
+        # Demo mode: skip actual sending
+        if not self.settings.whatsapp_enabled:
+            logger.info(f"[DEMO MODE] Would send image to {jid}")
+            return True
+        
         payload = {
             "number": jid.replace("@c.us", "").replace("@g.us", ""),
             "image": image_url,

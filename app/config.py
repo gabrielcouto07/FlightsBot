@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     # Anti-spam Configuration
     alert_cooldown_hours: int = 24
     
+    # Demo Mode Configuration
+    demo_mode: bool = True
+    whatsapp_enabled: bool = False
+    frontend_url: str = "http://localhost:3000"
+    default_threshold_domestic: float = 299.0
+    default_threshold_intl: float = 1499.0
+    
     class Config:
         env_file = ".env"
         case_sensitive = False

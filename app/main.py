@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.database import init_db, close_db, create_tables
 from app.scheduler import get_scheduler
-from app.routers import webhook, routes_api, users_api, alerts_api
+from app.routers import webhook, routes_api, users_api, alerts_api, search_api, demo_api
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -25,7 +25,8 @@ async def lifespan(app: FastAPI):
     Startup:
     - Initialize database
     - Create tables
-    - Start APScheduler 1409
+    - Start APScheduler (if WHATSAPP_ENABLED)
+    - Initialize WhatsApp client (if WHATSAPP_ENABLED)
     
     Shutdown:
     - Stop scheduler
@@ -34,6 +35,7 @@ async def lifespan(app: FastAPI):
     
     # Startup
     logger.info("Starting up Flight Bot...")
+    logger.info(f"Demo mode: {settings.demo_mode}, WhatsApp enabled: {settings.whatsapp_enabled}")
     
     try:
         # Initialize database
@@ -44,10 +46,13 @@ async def lifespan(app: FastAPI):
         await create_tables()
         logger.info("Database tables created")
         
-        # Start scheduler
-        scheduler = get_scheduler()
-        scheduler.start()
-        logger.info("Scheduler started")
+        # Start scheduler only if WhatsApp is enabled
+        if settings.whatsapp_enabled:
+            scheduler = get_scheduler()
+            scheduler.start()
+            logger.info("Scheduler started")
+        else:
+            logger.info("Scheduler skipped (WhatsApp disabled)")
         
         logger.info("Flight Bot startup complete")
     
@@ -61,10 +66,11 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Flight Bot...")
     
     try:
-        # Stop scheduler
-        scheduler = get_scheduler()
-        scheduler.stop()
-        logger.info("Scheduler stopped")
+        # Stop scheduler if it was started
+        if settings.whatsapp_enabled:
+            scheduler = get_scheduler()
+            scheduler.stop()
+            logger.info("Scheduler stopped")
         
         # Close database
         await close_db()
@@ -105,6 +111,8 @@ def create_app() -> FastAPI:
     app.include_router(routes_api.router)
     app.include_router(users_api.router)
     app.include_router(alerts_api.router)
+    app.include_router(search_api.router)
+    app.include_router(demo_api.router)
     
     # Health check endpoint
     @app.get("/health")
