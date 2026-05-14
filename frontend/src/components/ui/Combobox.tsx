@@ -103,7 +103,12 @@ export const Combobox = ({
               setQuery(event.target.value);
               setIsOpen(true);
             }}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => {
+              if (selectedOption && query === selectedOption.label) {
+                setQuery('');
+              }
+              setIsOpen(true);
+            }}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && filteredOptions.length > 0) {
                 event.preventDefault();
@@ -137,7 +142,7 @@ export const Combobox = ({
       {isOpen ? (
         <div
           data-state={isOpen ? 'open' : 'closed'}
-          className="dropdown-panel absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 max-h-72 overflow-y-auto rounded-xl border border-border-primary bg-bg-quaternary shadow-md"
+          className="dropdown-panel mt-2 max-h-72 overflow-y-auto rounded-xl border border-border-primary bg-bg-quaternary shadow-md"
         >
           {filteredOptions.length > 0 ? (
             filteredOptions.map((option) => (
