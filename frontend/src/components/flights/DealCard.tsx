@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowRight, Star, Zap } from 'lucide-react';
-import { format, formatDistanceToNowStrict } from 'date-fns';
+import { differenceInSeconds, format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 import { Deal } from '../../api/search';
@@ -17,6 +17,21 @@ const formatDuration = (minutes: number) => {
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
   return `${hours}h ${remainder}m`;
+};
+
+const formatLastSeen = (value: string) => {
+  const lastSeenAt = new Date(value);
+
+  if (Number.isNaN(lastSeenAt.getTime())) {
+    return 'agora';
+  }
+
+  const secondsAgo = Math.abs(differenceInSeconds(new Date(), lastSeenAt));
+  if (secondsAgo < 60) {
+    return 'agora';
+  }
+
+  return formatDistanceToNow(lastSeenAt, { locale: ptBR, addSuffix: true });
 };
 
 const getBadge = (deal: Deal) => {
@@ -137,7 +152,7 @@ export const DealCard = ({ deal }: DealCardProps) => {
           <div
             className={`mt-2 text-xs ${deal.booking_source === 'direct_airline' ? 'text-success' : 'text-text-muted'}`}
           >
-            {footerSource} · {formatDistanceToNowStrict(new Date(deal.fare_last_seen_at), { locale: ptBR })}
+            {footerSource} · {formatLastSeen(deal.fare_last_seen_at)}
           </div>
         </div>
       </div>
