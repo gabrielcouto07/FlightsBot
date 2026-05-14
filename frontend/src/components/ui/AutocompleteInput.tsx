@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 interface AutocompleteInputProps {
@@ -23,11 +22,6 @@ export const AutocompleteInput = ({
   const [filteredOptions, setFilteredOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = useState<{ top: number; left: number; width: number }>({
-    top: 0,
-    left: 0,
-    width: 0,
-  });
 
   useEffect(() => {
     if (value.trim()) {
@@ -55,24 +49,6 @@ export const AutocompleteInput = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const updateCoords = () => {
-    const el = inputRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setCoords({ top: rect.bottom, left: rect.left, width: rect.width });
-  };
-
-  useLayoutEffect(() => {
-    if (isOpen) {
-      updateCoords();
-      window.addEventListener('resize', updateCoords);
-      window.addEventListener('scroll', updateCoords, true);
-    }
-    return () => {
-      window.removeEventListener('resize', updateCoords);
-      window.removeEventListener('scroll', updateCoords, true);
-    };
-  }, [isOpen, value, filteredOptions]);
 
   const handleSelect = (option: string) => {
     onChange(option);
@@ -109,32 +85,25 @@ export const AutocompleteInput = ({
         />
       </div>
 
-      {isOpen && filteredOptions.length > 0 &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <div
-            ref={dropdownRef}
-            style={{ top: coords.top + window.scrollY, left: coords.left, width: coords.width }}
-            className="fixed z-50 mt-1 rounded-lg border border-accent/30 bg-gradient-to-b from-bg-secondary to-bg-tertiary shadow-lg overflow-hidden"
-          >
-            <div className="max-h-[240px] overflow-y-auto">
-              {filteredOptions.map((option, idx) => (
-                <button
-                  key={`${option}-${idx}`}
-                  type="button"
-                  onClick={() => handleSelect(option)}
-                  className="w-full px-4 py-2.5 text-left text-sm text-text-primary hover:bg-accent/15 hover:text-accent transition-colors duration-150 border-b border-border-primary/30 last:border-b-0 flex items-center justify-between group"
-                >
-                  <span>{option}</span>
-                  <span className="text-text-muted group-hover:text-accent text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                    →
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>,
-          document.body
-        )}
+      {isOpen && filteredOptions.length > 0 && (
+        <div className="mt-1 rounded-lg border border-accent/30 bg-gradient-to-b from-bg-secondary to-bg-tertiary shadow-lg overflow-hidden" ref={dropdownRef}>
+          <div className="max-h-[240px] overflow-y-auto">
+            {filteredOptions.map((option, idx) => (
+              <button
+                key={`${option}-${idx}`}
+                type="button"
+                onClick={() => handleSelect(option)}
+                className="w-full px-4 py-2.5 text-left text-sm text-text-primary hover:bg-accent/15 hover:text-accent transition-colors duration-150 border-b border-border-primary/30 last:border-b-0 flex items-center justify-between group"
+              >
+                <span>{option}</span>
+                <span className="text-text-muted group-hover:text-accent text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                  →
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && <span className="text-xs text-danger font-500">{error}</span>}
     </div>
