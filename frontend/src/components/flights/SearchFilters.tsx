@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { Filter, Search, SlidersHorizontal } from 'lucide-react';
 
-import { Button, Input, Select } from '../ui';
+import { Button, Input, Select, AutocompleteInput } from '../ui';
 import {
   airlinePresets,
   airportOptions,
@@ -128,19 +128,19 @@ export const SearchFilters = ({ onSearch, isLoading = false }: SearchFiltersProp
         onSubmit={handleSubmit}
         className="grid gap-3 rounded-xl border border-border-primary bg-gradient-to-br from-bg-secondary/40 to-bg-tertiary/40 p-5 backdrop-blur-md shadow-lg xl:grid-cols-[1.1fr_1.1fr_0.9fr_0.9fr_0.9fr_0.8fr_0.65fr_auto]"
       >
-        <Input
+        <AutocompleteInput
           label="Origin"
           value={originInput}
-          list="origin-airports"
+          options={airportHints}
           placeholder="GRU or Sao Paulo"
-          onChange={(event) => setOriginInput(event.target.value)}
+          onChange={(value) => setOriginInput(value)}
         />
-        <Input
+        <AutocompleteInput
           label="Destination"
           value={destinationInput}
-          list="destination-airports"
+          options={['Anywhere', ...airportHints]}
           placeholder="Anywhere or MIA"
-          onChange={(event) => setDestinationInput(event.target.value)}
+          onChange={(value) => setDestinationInput(value)}
         />
         <Input
           label="Window Start"
@@ -199,17 +199,6 @@ export const SearchFilters = ({ onSearch, isLoading = false }: SearchFiltersProp
             <SlidersHorizontal size={16} strokeWidth={2} />
           </Button>
         </div>
-        <datalist id="origin-airports">
-          {airportHints.map((airport) => (
-            <option key={airport} value={airport} />
-          ))}
-        </datalist>
-        <datalist id="destination-airports">
-          <option value="Anywhere" />
-          {airportHints.map((airport) => (
-            <option key={airport} value={airport} />
-          ))}
-        </datalist>
       </form>
 
       <div className="flex flex-wrap gap-2">

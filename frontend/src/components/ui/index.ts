@@ -5,6 +5,7 @@ export { Combobox } from './Combobox';
 export type { ComboboxOption } from './Combobox';
 export { DatePicker } from './DatePicker';
 export { Input } from './Input';
+export { AutocompleteInput } from './AutocompleteInput';
 export { Select } from './Select';
 export { Modal } from './Modal';
 export { Table } from './Table';
