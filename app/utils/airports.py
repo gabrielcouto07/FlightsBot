@@ -1,9 +1,12 @@
-"""Airport database with IATA codes, cities, and country information"""
+"""Airport lookup helpers used by search and UI endpoints."""
+
+from __future__ import annotations
 
 from typing import Dict
 
-AIRPORTS: Dict[str, Dict[str, str]] = {
-    # Brazilian Airports
+AirportInfo = Dict[str, str]
+
+AIRPORTS: Dict[str, AirportInfo] = {
     "GRU": {"city": "São Paulo", "country": "Brazil", "flag": "🇧🇷"},
     "GIG": {"city": "Rio de Janeiro", "country": "Brazil", "flag": "🇧🇷"},
     "CGH": {"city": "São Paulo (Congonhas)", "country": "Brazil", "flag": "🇧🇷"},
@@ -33,15 +36,12 @@ AIRPORTS: Dict[str, Dict[str, str]] = {
     "UDI": {"city": "Uberlândia", "country": "Brazil", "flag": "🇧🇷"},
     "RAO": {"city": "Ribeirão Preto", "country": "Brazil", "flag": "🇧🇷"},
     "LDB": {"city": "Londrina", "country": "Brazil", "flag": "🇧🇷"},
-    
-    # International Airports
     "MIA": {"city": "Miami", "country": "United States", "flag": "🇺🇸"},
     "JFK": {"city": "New York", "country": "United States", "flag": "🇺🇸"},
     "LAX": {"city": "Los Angeles", "country": "United States", "flag": "🇺🇸"},
     "ORD": {"city": "Chicago", "country": "United States", "flag": "🇺🇸"},
     "DEN": {"city": "Denver", "country": "United States", "flag": "🇺🇸"},
     "ATL": {"city": "Atlanta", "country": "United States", "flag": "🇺🇸"},
-    
     "LIS": {"city": "Lisbon", "country": "Portugal", "flag": "🇵🇹"},
     "MAD": {"city": "Madrid", "country": "Spain", "flag": "🇪🇸"},
     "BCN": {"city": "Barcelona", "country": "Spain", "flag": "🇪🇸"},
@@ -59,14 +59,12 @@ AIRPORTS: Dict[str, Dict[str, str]] = {
     "NCE": {"city": "Nice", "country": "France", "flag": "🇫🇷"},
     "ARN": {"city": "Stockholm", "country": "Sweden", "flag": "🇸🇪"},
     "CPH": {"city": "Copenhagen", "country": "Denmark", "flag": "🇩🇰"},
-    
     "EZE": {"city": "Buenos Aires", "country": "Argentina", "flag": "🇦🇷"},
     "SCL": {"city": "Santiago", "country": "Chile", "flag": "🇨🇱"},
     "BOG": {"city": "Bogotá", "country": "Colombia", "flag": "🇨🇴"},
     "LIM": {"city": "Lima", "country": "Peru", "flag": "🇵🇪"},
     "CUN": {"city": "Cancún", "country": "Mexico", "flag": "🇲🇽"},
     "PTY": {"city": "Panama City", "country": "Panama", "flag": "🇵🇦"},
-    
     "DXB": {"city": "Dubai", "country": "United Arab Emirates", "flag": "🇦🇪"},
     "DOH": {"city": "Doha", "country": "Qatar", "flag": "🇶🇦"},
     "SYD": {"city": "Sydney", "country": "Australia", "flag": "🇦🇺"},
@@ -76,41 +74,46 @@ AIRPORTS: Dict[str, Dict[str, str]] = {
     "HND": {"city": "Tokyo (Haneda)", "country": "Japan", "flag": "🇯🇵"},
 }
 
-BRAZILIAN_AIRPORTS = {code for code, info in AIRPORTS.items() if info["country"] == "Brazil"}
+UNKNOWN_AIRPORT: AirportInfo = {
+    "city": "Unknown",
+    "country": "Unknown",
+    "flag": "🌍",
+}
+
+BRAZILIAN_AIRPORTS = {
+    code
+    for code, info in AIRPORTS.items()
+    if info["country"] == "Brazil"
+}
+
+
+def normalize_airport_code(value: str | None) -> str:
+    """Normalize an airport-like value into a clean IATA code."""
+    if not value:
+        return ""
+
+    normalized = value.strip().upper()
+    if normalized == "ANYWHERE":
+        return "ANYWHERE"
+
+    return normalized[:3]
 
 
 def is_domestic(origin: str, destination: str) -> bool:
-    """
-    Check if a flight route is domestic (both airports in Brazil).
-    
-    Args:
-        origin: Origin IATA code
-        destination: Destination IATA code
-    
-    Returns:
-        True if both airports are in Brazil, False otherwise
-    """
-    return origin in BRAZILIAN_AIRPORTS and destination in BRAZILIAN_AIRPORTS
-
-
-def get_airport_info(iata: str) -> dict:
-    """
-    Get airport information by IATA code.
-    
-    Args:
-        iata: IATA code
-    
-    Returns:
-        Airport info dict or default dict if not found
-    """
-    return AIRPORTS.get(
-        iata,
-        {"city": "Unknown", "country": "Unknown", "flag": "🌍"}
+    """Check whether both endpoints are Brazilian airports."""
+    return (
+        normalize_airport_code(origin) in BRAZILIAN_AIRPORTS
+        and normalize_airport_code(destination) in BRAZILIAN_AIRPORTS
     )
 
 
-def get_brazilian_airports() -> list[dict]:
-    """Get list of Brazilian airports with their info"""
+def get_airport_info(iata: str) -> AirportInfo:
+    """Return airport metadata or a safe unknown fallback."""
+    return AIRPORTS.get(normalize_airport_code(iata), UNKNOWN_AIRPORT.copy())
+
+
+def get_brazilian_airports() -> list[dict[str, str]]:
+    """Return Brazilian airports for selector UIs."""
     return [
         {"code": code, **info}
         for code, info in AIRPORTS.items()
@@ -118,9 +121,6 @@ def get_brazilian_airports() -> list[dict]:
     ]
 
 
-def get_all_airports() -> list[dict]:
-    """Get list of all airports with their info"""
-    return [
-        {"code": code, **info}
-        for code, info in AIRPORTS.items()
-    ]
+def get_all_airports() -> list[dict[str, str]]:
+    """Return all known airport options."""
+    return [{"code": code, **info} for code, info in AIRPORTS.items()]

@@ -10,8 +10,10 @@ interface CardProps {
 export const Card = ({ children, className = '', onClick, hoverable = false }: CardProps) => {
   return (
     <div
-      className={`bg-bg-secondary border border-border-primary rounded-lg p-4 ${
-        hoverable ? 'cursor-pointer hover:bg-bg-tertiary transition-colors' : ''
+      className={`rounded-xl border border-border-primary bg-gradient-to-br from-bg-secondary to-bg-tertiary p-6 backdrop-blur-sm ${
+        hoverable
+          ? 'cursor-pointer transition-all duration-300 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5'
+          : ''
       } ${className}`}
       onClick={onClick}
     >

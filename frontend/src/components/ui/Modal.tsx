@@ -25,17 +25,17 @@ export const Modal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`bg-bg-secondary border border-border-primary rounded-lg w-full ${sizeClasses[size]} max-h-90vh overflow-y-auto`}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className={`bg-gradient-to-br from-bg-secondary to-bg-tertiary border border-border-primary rounded-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-y-auto shadow-2xl`}>
         {title && (
-          <div className="flex items-center justify-between p-4 border-b border-border-primary">
-            <h2 className="text-lg font-bold text-primary">{title}</h2>
-            <button onClick={onClose} className="text-tertiary hover:text-primary">
-              <X size={20} />
+          <div className="flex items-center justify-between p-5 border-b border-border-primary">
+            <h2 className="text-lg font-700 text-text-primary">{title}</h2>
+            <button onClick={onClose} className="text-text-secondary hover:text-text-primary transition-colors p-1 hover:bg-bg-quaternary rounded-lg">
+              <X size={20} strokeWidth={2} />
             </button>
           </div>
         )}
-        <div className="p-4">{children}</div>
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );

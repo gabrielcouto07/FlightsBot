@@ -35,7 +35,9 @@ async def lifespan(app: FastAPI):
     
     # Startup
     logger.info("Starting up Flight Bot...")
-    logger.info(f"Demo mode: {settings.demo_mode}, WhatsApp enabled: {settings.whatsapp_enabled}")
+    logger.info(
+        f"Demo mode: {settings.demo_mode}, WhatsApp enabled: {settings.whatsapp_ready}"
+    )
     
     try:
         # Initialize database
@@ -47,7 +49,7 @@ async def lifespan(app: FastAPI):
         logger.info("Database tables created")
         
         # Start scheduler only if WhatsApp is enabled
-        if settings.whatsapp_enabled:
+        if settings.whatsapp_ready:
             scheduler = get_scheduler()
             scheduler.start()
             logger.info("Scheduler started")
@@ -67,7 +69,7 @@ async def lifespan(app: FastAPI):
     
     try:
         # Stop scheduler if it was started
-        if settings.whatsapp_enabled:
+        if settings.whatsapp_ready:
             scheduler = get_scheduler()
             scheduler.stop()
             logger.info("Scheduler stopped")

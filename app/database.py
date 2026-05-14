@@ -72,6 +72,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 async def create_tables() -> None:
     """Create all database tables"""
+    import app.models  # noqa: F401
     from app.models.base import Base
     
     if async_engine is None:

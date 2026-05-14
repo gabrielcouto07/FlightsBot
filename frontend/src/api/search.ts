@@ -16,10 +16,43 @@ export interface Deal {
   return_at?: string;
   duration_minutes: number;
   stops: number;
+  booking_token?: string;
+  deeplink_url: string;
+  booking_source: 'kiwi' | 'direct_airline' | 'google_flights' | 'airline_homepage';
+  booking_source_label: string;
+  provider_code: string;
   booking_url: string;
   deep_link: string;
+  provider_name: string;
+  booking_source_type: string;
+  deeplink_tier: number;
+  provider_itinerary_id?: string;
+  fare_token?: string;
+  fare_last_seen_at: string;
+  purchase_url: string;
+  purchase_label: string;
+  secondary_purchase_url: string;
+  secondary_purchase_label: string;
+  official_airline_url: string;
+  official_airline_label: string;
+  historical_avg_price: number;
+  historical_low_price: number;
+  savings_percent: number;
+  trend_change_7d: number;
+  price_history_7d: number[];
+  opportunity_score: number;
+  opportunity_badges: string[];
+  distance_miles?: number;
+  cpm?: number;
   is_deal: boolean;
   deal_badge?: string;
+}
+
+export interface AirportOption {
+  code: string;
+  city: string;
+  country: string;
+  flag: string;
 }
 
 export interface SearchParams {
@@ -32,6 +65,7 @@ export interface SearchParams {
   nights_min?: number;
   nights_max?: number;
   adults?: number;
+  airline?: string;
   limit?: number;
 }
 
@@ -43,6 +77,14 @@ export interface SearchResponse {
     fly_to: string;
     searched_at: string;
     source: string;
+    actionable_link_rate: number;
+    source_confidence_note: string;
+  };
+  kpis: {
+    total_scanned_24h: number;
+    active_alerts: number;
+    average_cpm?: number | null;
+    top_saving_percent: number;
   };
 }
 
@@ -51,6 +93,11 @@ export const searchAPI = {
     const response = await apiClient.get<SearchResponse>('/api/search/deals', {
       params,
     });
+    return response.data;
+  },
+
+  listAirports: async (): Promise<AirportOption[]> => {
+    const response = await apiClient.get<AirportOption[]>('/api/search/airports');
     return response.data;
   },
 

@@ -1,28 +1,30 @@
-import { Card, Skeleton } from '../ui';
-
 export const DealCardSkeleton = () => {
   return (
-    <Card>
-      <div className="space-y-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <Skeleton width="60%" height="1.5rem" className="mb-2" />
-            <Skeleton width="80%" height="1rem" />
+    <div className="rounded-xl border border-border-primary bg-bg-tertiary p-5">
+      <div className="grid gap-5 lg:grid-cols-[20%_45%_35%] lg:items-center">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg animate-surface-shimmer" />
+          <div className="space-y-2">
+            <div className="h-3 w-24 rounded-full animate-surface-shimmer" />
+            <div className="h-3 w-16 rounded-full animate-surface-shimmer" />
           </div>
-          <Skeleton width="100px" height="2rem" />
         </div>
 
-        <div className="grid grid-cols-3 gap-3 py-3 border-y border-border-primary">
-          <Skeleton height="3rem" />
-          <Skeleton height="3rem" />
-          <Skeleton height="3rem" />
+        <div className="space-y-3">
+          <div className="h-5 w-32 rounded-full animate-surface-shimmer" />
+          <div className="h-3 w-40 rounded-full animate-surface-shimmer" />
+          <div className="h-3 w-28 rounded-full animate-surface-shimmer" />
+          <div className="h-3 w-36 rounded-full animate-surface-shimmer" />
         </div>
 
-        <div className="flex items-center justify-between">
-          <Skeleton width="40%" height="1rem" />
-          <Skeleton width="30%" height="1rem" />
+        <div className="space-y-3 lg:ml-auto lg:w-[180px]">
+          <div className="h-6 w-28 rounded-full animate-surface-shimmer" />
+          <div className="h-3 w-32 rounded-full animate-surface-shimmer" />
+          <div className="h-7 w-20 rounded-full animate-surface-shimmer" />
+          <div className="h-9 rounded-[10px] animate-surface-shimmer" />
+          <div className="h-3 w-24 rounded-full animate-surface-shimmer" />
         </div>
       </div>
-    </Card>
+    </div>
   );
 };

@@ -19,8 +19,8 @@ class WhatsAppClient:
     def __init__(self):
         """Initialize WhatsApp client with Evolution API credentials"""
         self.settings = get_settings()
-        self.base_url = self.settings.evolution_api_url
-        self.api_key = self.settings.evolution_api_key
+        self.base_url = self.settings.evolution_api_url or ""
+        self.api_key = self.settings.evolution_api_key or ""
         self.instance_name = self.settings.evolution_instance_name
     
     async def _request(
@@ -81,7 +81,7 @@ class WhatsAppClient:
             True if successful, False otherwise
         """
         # Demo mode: skip actual sending
-        if not self.settings.whatsapp_enabled:
+        if not self.settings.whatsapp_ready:
             logger.info(f"[DEMO MODE] Would send message to {jid}: {message[:50]}...")
             return True
         
@@ -154,7 +154,7 @@ class WhatsAppClient:
             True if successful
         """
         # Demo mode: skip actual sending
-        if not self.settings.whatsapp_enabled:
+        if not self.settings.whatsapp_ready:
             logger.info(f"[DEMO MODE] Would send image to {jid}")
             return True
         
@@ -196,6 +196,10 @@ class WhatsAppClient:
         Returns:
             True if successful
         """
+        if not self.settings.whatsapp_ready:
+            logger.info(f"[DEMO MODE] Would send button message to {jid}: {title}")
+            return True
+
         payload = {
             "number": jid.replace("@c.us", "").replace("@g.us", ""),
             "title": title,

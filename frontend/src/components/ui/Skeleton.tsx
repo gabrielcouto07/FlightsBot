@@ -20,7 +20,7 @@ export const Skeleton = ({
       {items.map((_, idx) => (
         <div
           key={idx}
-          className={`bg-bg-tertiary animate-pulse ${className} ${circle ? 'rounded-full' : 'rounded'}`}
+          className={`animate-pulse bg-gradient-to-r from-bg-tertiary via-bg-quaternary to-bg-tertiary ${className} ${circle ? 'rounded-full' : 'rounded-lg'}`}
           style={{ width, height }}
         />
       ))}

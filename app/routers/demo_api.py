@@ -1,10 +1,11 @@
-"""Demo API - seed data and notification tracking"""
+"""Demo API - seed data and notification tracking."""
 
+import json
 import logging
 import uuid
-import json
-from datetime import datetime, timedelta, date
-from fastapi import APIRouter, HTTPException, Depends
+from datetime import timedelta, date
+
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from pydantic import BaseModel
@@ -78,8 +79,9 @@ async def seed_demo_data(
             # Check if user exists
             stmt = select(User).where(User.phone_number == user_data["phone"])
             existing = await db.execute(stmt)
-            if existing.scalar_one_or_none():
-                user_map[user_data["name"]] = existing.scalar()
+            existing_user = existing.scalar_one_or_none()
+            if existing_user:
+                user_map[user_data["name"]] = existing_user
                 continue
             
             user = User(
@@ -221,7 +223,7 @@ async def seed_demo_data(
 
 @router.get("/notifications", response_model=DemoNotificationsResponse)
 async def get_demo_notifications(
-    limit: int = 50,
+    limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ) -> DemoNotificationsResponse:
     """

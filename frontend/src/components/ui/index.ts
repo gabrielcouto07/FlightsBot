@@ -1,9 +1,14 @@
 export { Button } from './Button';
 export { Badge } from './Badge';
 export { Card } from './Card';
+export { Combobox } from './Combobox';
+export type { ComboboxOption } from './Combobox';
+export { DatePicker } from './DatePicker';
 export { Input } from './Input';
 export { Select } from './Select';
 export { Modal } from './Modal';
 export { Table } from './Table';
 export { Skeleton } from './Skeleton';
 export { EmptyState } from './EmptyState';
+export { Sparkline } from './Sparkline';
+export { TripToggle } from './TripToggle';

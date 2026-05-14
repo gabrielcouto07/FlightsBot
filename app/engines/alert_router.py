@@ -1,10 +1,11 @@
-"""Alert router - route deals to free group or paid users"""
+"""Alert router - route deals to free group or paid users."""
 
+import json
 import logging
 import uuid
-from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.demo_notification import DemoNotification
 from app.models.price_snapshot import PriceSnapshot
 from app.models.user_alert import UserAlert
 from app.models.sent_alert import SentAlert
@@ -19,7 +20,7 @@ settings = get_settings()
 
 
 class AlertRouter:
-    """Routes flight deals to free group or individual paid users"""
+    """Routes flight deals to free group or individual paid users."""
     
     def __init__(self):
         """Initialize alert router with WhatsApp client"""
@@ -105,6 +106,7 @@ class AlertRouter:
                             alert_type="paid_user_dm",
                         )
                         db.add(sent_alert)
+                        await self._log_demo_notification(db, user, snapshot)
                         result["users_notified"] += 1
                         logger.info(f"Notified user {user_id} about deal")
                     else:
@@ -120,6 +122,35 @@ class AlertRouter:
         
         await db.commit()
         return result
+
+    async def _log_demo_notification(
+        self,
+        db: AsyncSession,
+        user: User,
+        snapshot: PriceSnapshot,
+    ) -> None:
+        """Persist simulated notifications while WhatsApp delivery is disabled."""
+        if not settings.demo_mode or settings.whatsapp_ready:
+            return
+
+        payload = {
+            "origin": snapshot.origin,
+            "destination": snapshot.destination,
+            "price": snapshot.price,
+            "currency": snapshot.currency,
+            "airline": snapshot.airline,
+            "departure_at": snapshot.departure_at.isoformat(),
+            "deep_link": snapshot.deep_link,
+        }
+        db.add(
+            DemoNotification(
+                id=str(uuid.uuid4()),
+                user_id=user.id,
+                user_name=user.name or user.phone_number,
+                user_plan=user.plan,
+                deal_json=json.dumps(payload),
+            )
+        )
     
     async def _add_to_digest(
         self,

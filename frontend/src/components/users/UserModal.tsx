@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User } from '../../api/users';
 import { Modal, Input, Select, Button } from '../ui';
 
@@ -22,6 +22,14 @@ export const UserModal = ({
     name: user?.name || '',
     plan: user?.plan || 'free' as 'free' | 'paid',
   });
+
+  useEffect(() => {
+    setFormData({
+      phone_number: user?.phone_number || '',
+      name: user?.name || '',
+      plan: user?.plan || 'free',
+    });
+  }, [user, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +67,7 @@ export const UserModal = ({
         />
 
         <div className="flex gap-2 pt-4">
-          <Button variant="secondary" onClick={onClose} className="flex-1">
+          <Button type="button" variant="secondary" onClick={onClose} className="flex-1">
             Cancel
           </Button>
           <Button type="submit" variant="primary" isLoading={isLoading} className="flex-1">

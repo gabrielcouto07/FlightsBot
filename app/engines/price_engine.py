@@ -1,4 +1,4 @@
-"""Price detection engine - identify flight deals"""
+"""Price detection engine - identify flight deals."""
 
 import logging
 from datetime import datetime, timedelta
@@ -12,6 +12,17 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+
+def _parse_snapshot_datetime(value: datetime | str | None) -> datetime | None:
+    """Normalize ISO datetime strings before persisting snapshots."""
+    if value is None or isinstance(value, datetime):
+        return value
+
+    if isinstance(value, str):
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+    raise TypeError(f"Unsupported datetime value: {type(value)!r}")
 
 
 async def is_deal(snapshot: PriceSnapshot, route: Route) -> bool:
@@ -49,7 +60,12 @@ async def save_snapshot_if_deal(
         PriceSnapshot if saved, None otherwise
     """
     # Check if it's a deal
-    snapshot = PriceSnapshot(**snapshot_data)
+    normalized_snapshot_data = {
+        **snapshot_data,
+        "departure_at": _parse_snapshot_datetime(snapshot_data.get("departure_at")),
+        "return_at": _parse_snapshot_datetime(snapshot_data.get("return_at")),
+    }
+    snapshot = PriceSnapshot(**normalized_snapshot_data)
     
     if not await is_deal(snapshot, route):
         logger.debug(f"Price {snapshot.price} is not a deal (threshold: {route.threshold_price})")

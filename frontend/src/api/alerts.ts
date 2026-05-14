@@ -13,12 +13,17 @@ export interface UserAlert {
   updated_at: string;
 }
 
+interface AlertListResponse {
+  total: number;
+  alerts: UserAlert[];
+}
+
 export const alertsAPI = {
   listAlerts: async (userId?: string): Promise<UserAlert[]> => {
-    const response = await apiClient.get<UserAlert[]>('/api/alerts', {
+    const response = await apiClient.get<AlertListResponse>('/api/alerts', {
       params: userId ? { user_id: userId } : {},
     });
-    return response.data;
+    return response.data.alerts;
   },
 
   getAlert: async (alertId: string): Promise<UserAlert> => {
@@ -34,7 +39,19 @@ export const alertsAPI = {
     date_to?: string;
     max_price: number;
   }): Promise<UserAlert> => {
-    const response = await apiClient.post<UserAlert>('/api/alerts', data);
+    const response = await apiClient.post<UserAlert>(
+      '/api/alerts',
+      {
+        origin_iata: data.origin_iata,
+        destination_iata: data.destination_iata,
+        date_from: data.date_from,
+        date_to: data.date_to,
+        max_price: data.max_price,
+      },
+      {
+        params: { user_id: data.user_id },
+      }
+    );
     return response.data;
   },
 

@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '../components/layout/Layout';
-import { Card, Button, Input, Badge } from '../components/ui';
+import { Card, Button, Badge } from '../components/ui';
 import { searchAPI, Deal } from '../api/search';
 import { usersAPI, User } from '../api/users';
-import { EmptyState } from '../components/ui';
 
 export const FilterLab = () => {
   const [deals, setDeals] = useState<Deal[]>([]);

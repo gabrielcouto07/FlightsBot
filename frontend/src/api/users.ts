@@ -10,10 +10,15 @@ export interface User {
   updated_at: string;
 }
 
+interface UserListResponse {
+  total: number;
+  users: User[];
+}
+
 export const usersAPI = {
   listUsers: async (): Promise<User[]> => {
-    const response = await apiClient.get<User[]>('/api/users');
-    return response.data;
+    const response = await apiClient.get<UserListResponse>('/api/users');
+    return response.data.users;
   },
 
   getUser: async (userId: string): Promise<User> => {

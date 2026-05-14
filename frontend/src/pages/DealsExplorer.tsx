@@ -1,116 +1,130 @@
-import { useState } from 'react';
-import { SearchFilters, SearchFiltersType } from '../components/flights/SearchFilters';
-import { DealCard, DealCardSkeleton } from '../components/flights';
-import { MatchPreviewPanel } from '../components/flights/MatchPreviewPanel';
-import { searchAPI, Deal } from '../api/search';
-import { EmptyState } from '../components/ui';
+import { useEffect, useState } from 'react';
+import { AlertTriangle, PlaneLanding } from 'lucide-react';
+
+import { Deal, SearchResponse, searchAPI } from '../api/search';
+import {
+  DealCard,
+  DealCardSkeleton,
+  KpiStrip,
+  SearchBar,
+  SearchBarValues,
+  defaultSearchValues,
+} from '../components/flights';
+import { Button } from '../components/ui';
 import { Layout } from '../components/layout/Layout';
+
+const getDealKey = (deal: Deal) =>
+  [
+    deal.provider_itinerary_id ?? 'no-provider-id',
+    deal.origin,
+    deal.destination,
+    deal.departure_at,
+    deal.airline_iata,
+    deal.price,
+  ].join(':');
+
+const buildSearchHeadline = (searchMeta: SearchResponse['search_meta'] | null) => {
+  if (!searchMeta) {
+    return 'Ofertas';
+  }
+
+  return `${searchMeta.fly_from} para ${searchMeta.fly_to}`;
+};
+
+const buildSearchDescription = (searchMeta: SearchResponse['search_meta'] | null) => {
+  if (!searchMeta) {
+    return 'Pesquise tarifas em tempo real e abra a melhor opcao de reserva disponivel.';
+  }
+
+  if (searchMeta.source === 'demo-curated') {
+    return 'As tarifas exibidas sao do modo demonstracao. Os links ainda preservam rota e datas para facilitar a validacao da experiencia.';
+  }
+
+  return 'Resultados ao vivo com prioridade para links mais profundos de reserva e contexto de rota preservado.';
+};
 
 export const DealsExplorer = () => {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [searchMeta, setSearchMeta] = useState<SearchResponse['search_meta'] | null>(null);
+  const [kpis, setKpis] = useState<SearchResponse['kpis'] | null>(null);
 
-  const handleSearch = async (filters: SearchFiltersType) => {
+  const runSearch = async (filters: SearchBarValues) => {
     setIsLoading(true);
+    setError(null);
+
     try {
-      const response = await searchAPI.searchDeals({
-        fly_from: filters.fly_from,
-        fly_to: filters.fly_to === 'anywhere' ? 'anywhere' : filters.fly_to,
-        date_from: filters.date_from,
-        date_to: filters.date_to,
-        max_price: filters.max_price,
-        trip_type: filters.trip_type,
-        limit: filters.limit,
-      });
+      const response = await searchAPI.searchDeals(filters);
       setDeals(response.results);
-    } catch (error) {
-      console.error('Search error:', error);
+      setSearchMeta(response.search_meta);
+      setKpis(response.kpis);
+    } catch (searchError) {
+      console.error('Falha na busca', searchError);
       setDeals([]);
+      setError(searchError instanceof Error ? searchError.message : 'Nao foi possivel concluir a busca.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const dealCount = deals.length;
-  const matchedCount = deals.filter((d) => d.is_deal).length;
+  useEffect(() => {
+    void runSearch(defaultSearchValues);
+  }, []);
 
   return (
     <Layout>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        {/* Main Layout: Search + Preview */}
-        <div className="grid grid-cols-3 gap-6">
-          {/* Left: Search Filters */}
-          <div className="col-span-1">
-            <SearchFilters onSearch={handleSearch} isLoading={isLoading} />
-          </div>
+      <div className="space-y-6">
+        <SearchBar onSearch={runSearch} isLoading={isLoading} />
 
-          {/* Center: Deal List */}
-          <div className="col-span-2">
-            <div className="space-y-4">
-              {dealCount > 0 && (
-                <div className="text-sm text-secondary">
-                  Found {dealCount} flights • {matchedCount} deals
-                </div>
-              )}
+        <section className="space-y-4">
+          <KpiStrip kpis={kpis} resultCount={deals.length} isLoading={isLoading} />
 
-              {isLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <DealCardSkeleton key={i} />
-                  ))}
-                </div>
-              ) : dealCount === 0 ? (
-                <EmptyState
-                  icon="✈️"
-                  title="No deals found"
-                  description="Search for flights to discover amazing deals"
-                />
-              ) : (
-                <div className="space-y-3">
-                  {deals.map((deal) => (
-                    <DealCard
-                      key={`${deal.origin}${deal.destination}${deal.departure_at}`}
-                      deal={deal}
-                      onSelect={setSelectedDeal}
-                    />
-                  ))}
-                </div>
-              )}
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-primary">{buildSearchHeadline(searchMeta)}</h2>
+              <p className="mt-1 max-w-3xl text-sm text-secondary">{buildSearchDescription(searchMeta)}</p>
             </div>
-          </div>
-        </div>
 
-        {/* Preview Panel for Selected Deal */}
-        {selectedDeal && (
-          <div className="mt-8 p-6 bg-bg-secondary border border-border-primary rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Selected Deal</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-tertiary">Route</p>
-                <p className="text-lg font-semibold">
-                  {selectedDeal.origin} → {selectedDeal.destination}
-                </p>
+            {searchMeta ? (
+              <div className="text-sm text-secondary">
+                {deals.length} oferta{deals.length === 1 ? '' : 's'} · {searchMeta.actionable_link_rate}% de cobertura profunda
               </div>
-              <div>
-                <p className="text-sm text-tertiary">Price</p>
-                <p className="text-2xl font-bold text-teal">
-                  R$ {selectedDeal.price.toLocaleString('pt-BR')}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-tertiary">Airline</p>
-                <p className="font-semibold">{selectedDeal.airline}</p>
-              </div>
-              <div>
-                <p className="text-sm text-tertiary">Duration</p>
-                <p className="font-semibold">
-                  {Math.floor(selectedDeal.duration_minutes / 60)}h {selectedDeal.duration_minutes % 60}m
-                </p>
-              </div>
-            </div>
+            ) : null}
           </div>
-        )}
+
+          {error ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-border-primary bg-bg-tertiary px-6 py-12 text-center">
+              <AlertTriangle size={48} className="text-warning" />
+              <h3 className="mt-4 text-[16px] font-semibold text-primary">Falha na busca</h3>
+              <p className="mt-2 max-w-md text-sm text-secondary">{error}</p>
+              <Button variant="primary" className="mt-5 rounded-[10px]" onClick={() => void runSearch(defaultSearchValues)}>
+                Tentar novamente
+              </Button>
+            </div>
+          ) : isLoading ? (
+            <section className="grid gap-4 lg:grid-cols-2">
+              {[1, 2, 3, 4].map((item) => (
+                <DealCardSkeleton key={item} />
+              ))}
+            </section>
+          ) : deals.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-border-primary bg-bg-tertiary px-6 py-14 text-center">
+              <PlaneLanding size={48} className="text-faint" />
+              <h3 className="mt-4 text-[18px] font-semibold text-primary">Nenhuma oferta encontrada</h3>
+              <p className="mt-2 text-sm text-secondary">Tente outra origem, destino ou um intervalo maior de datas.</p>
+              <Button variant="outline" className="mt-5 rounded-[10px] text-teal" onClick={() => void runSearch(defaultSearchValues)}>
+                Limpar filtros
+              </Button>
+            </div>
+          ) : (
+            <section className="results-grid grid gap-4 lg:grid-cols-2">
+              {deals.map((deal) => (
+                <DealCard key={getDealKey(deal)} deal={deal} />
+              ))}
+            </section>
+          )}
+        </section>
       </div>
     </Layout>
   );

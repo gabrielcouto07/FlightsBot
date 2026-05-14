@@ -1,107 +1,146 @@
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowDown, ArrowRight, Star, Zap } from 'lucide-react';
+import { format, formatDistanceToNowStrict } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
 import { Deal } from '../../api/search';
-import { Card, Badge } from '../ui';
-import { Plane, Clock, MapPin, TrendingDown } from 'lucide-react';
-import { format } from 'date-fns';
+import { Button, Sparkline } from '../ui';
 
 interface DealCardProps {
   deal: Deal;
-  onSelect?: (deal: Deal) => void;
 }
 
-export const DealCard = ({ deal, onSelect }: DealCardProps) => {
-  const formatPrice = (price: number) => {
-    return `R$ ${price.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
-  };
+const formatCurrency = (value: number) =>
+  `R$ ${value.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
-  };
+const formatDuration = (minutes: number) => {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  return `${hours}h ${remainder}m`;
+};
 
-  const departureTime = new Date(deal.departure_at);
-  const formattedDate = format(departureTime, 'dd/MM/yyyy');
-  const formattedTime = format(departureTime, 'HH:mm');
+const getBadge = (deal: Deal) => {
+  if ((deal.deal_badge ?? '').toLowerCase().includes('error')) {
+    return {
+      icon: <Zap size={12} />,
+      label: 'Tarifa erro',
+      tone: 'text-gold',
+    };
+  }
+
+  if (deal.price <= deal.historical_low_price) {
+    return {
+      icon: <Star size={12} />,
+      label: 'Menor preco em 45 dias',
+      tone: 'text-info',
+    };
+  }
+
+  if (deal.savings_percent >= 10) {
+    return {
+      icon: <ArrowDown size={12} />,
+      label: `${Math.round(deal.savings_percent)}% abaixo da media`,
+      tone: 'text-success',
+    };
+  }
+
+  return {
+    icon: null,
+    label: 'Melhor opcao agora',
+    tone: 'text-secondary',
+  };
+};
+
+export const DealCard = ({ deal }: DealCardProps) => {
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  useEffect(() => {
+    if (!deal.deeplink_url) {
+      console.warn('Oferta sem deeplink_url', {
+        origin: deal.origin,
+        destination: deal.destination,
+        airline: deal.airline,
+      });
+    }
+  }, [deal.airline, deal.deeplink_url, deal.destination, deal.origin]);
+
+  const departureDate = new Date(deal.departure_at);
+  const badge = useMemo(() => getBadge(deal), [deal]);
+  const footerSource =
+    deal.booking_source === 'direct_airline'
+      ? `direto: ${deal.provider_name}`
+      : deal.booking_source === 'kiwi'
+        ? 'via kiwi.com'
+        : 'via Google Flights';
+  const sparklineTone =
+    deal.trend_change_7d < 0 ? 'text-success' : deal.trend_change_7d > 0 ? 'text-warning' : 'text-secondary';
+  const stopTone =
+    deal.stops === 0 ? 'text-success' : deal.stops === 1 ? 'text-warning' : 'text-danger';
+  const stopLabel =
+    deal.stops === 0 ? 'Direto' : `${deal.stops} escala${deal.stops > 1 ? 's' : ''}`;
 
   return (
-    <Card hoverable onClick={() => onSelect?.(deal)}>
-      <div className="space-y-4">
-        {/* Header with Deal Badge */}
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-bold text-xl text-primary">
-                {deal.origin} → {deal.destination}
-              </span>
-              {deal.is_deal && (
-                <Badge variant="teal" size="sm">
-                  {deal.deal_badge || 'Hot Deal'}
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-secondary">
-              {deal.origin_city}, {deal.origin_country} → {deal.destination_city}, {deal.destination_country}
-            </p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-teal">{formatPrice(deal.price)}</div>
-            <p className="text-xs text-tertiary">{deal.currency}</p>
-          </div>
-        </div>
-
-        {/* Flight Details */}
-        <div className="grid grid-cols-3 gap-3 py-3 border-y border-border-primary">
-          <div className="flex items-center gap-2 text-sm">
-            <Clock size={16} className="text-tertiary" />
-            <div>
-              <p className="text-xs text-tertiary">Departure</p>
-              <p className="font-medium">{formattedTime}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <Plane size={16} className="text-tertiary" />
-            <div>
-              <p className="text-xs text-tertiary">Duration</p>
-              <p className="font-medium">{formatDuration(deal.duration_minutes)}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <TrendingDown size={16} className="text-tertiary" />
-            <div>
-              <p className="text-xs text-tertiary">Stops</p>
-              <p className="font-medium">{deal.stops}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Airline and Date */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {deal.airline_logo_url && (
+    <article className="rounded-xl border border-border-primary bg-gradient-to-br from-bg-secondary to-bg-tertiary p-5 transition-all duration-300 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5">
+      <div className="grid gap-5 lg:grid-cols-[20%_45%_35%] lg:items-center">
+        <div className="flex min-w-0 items-center gap-3 lg:items-start">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-quaternary border border-border-primary text-xs font-600 text-text-primary">
+            {!logoFailed && deal.airline_logo_url ? (
               <img
                 src={deal.airline_logo_url}
                 alt={deal.airline}
-                className="w-6 h-6 rounded"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
+                className="h-8 w-8 object-contain"
+                onError={() => setLogoFailed(true)}
               />
+            ) : (
+              <span>{deal.airline_iata || deal.provider_code || 'AIR'}</span>
             )}
-            <div className="text-sm">
-              <p className="font-medium text-primary">{deal.airline}</p>
-              <p className="text-xs text-tertiary">{formattedDate}</p>
-            </div>
           </div>
 
-          {deal.is_deal && (
-            <div className="text-right">
-              <p className="text-xs text-teal font-semibold">✨ Best Price</p>
-            </div>
-          )}
+          <div className="min-w-0">
+            <div className="truncate text-sm font-600 text-text-primary">{deal.airline}</div>
+            <div className="mt-1 truncate text-xs text-text-secondary">{deal.provider_code || deal.airline_iata}</div>
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-lg font-700 text-text-primary">
+            <span>{deal.origin}</span>
+            <ArrowRight size={16} className="shrink-0 text-text-secondary" strokeWidth={2.5} />
+            <span>{deal.destination}</span>
+          </div>
+          <div className="mt-1 truncate text-xs text-text-secondary">
+            {deal.origin_city} <span className="text-text-muted">·</span> {deal.destination_city}
+          </div>
+          <div className="mt-3 text-sm text-text-secondary">
+            {format(departureDate, "EEE, d 'de' MMM", { locale: ptBR })}
+          </div>
+          <div className="mt-1 text-sm">
+            <span className="text-text-secondary">{formatDuration(deal.duration_minutes)} · </span>
+            <span className={stopTone}>{stopLabel}</span>
+          </div>
+        </div>
+
+        <div className="min-w-0 lg:text-right">
+          <div className="text-2xl font-700 text-accent">{formatCurrency(deal.price)}</div>
+          <div className={`mt-2 inline-flex max-w-full items-center gap-1.5 text-xs font-500 ${badge.tone}`}>
+            {badge.icon}
+            <span className="truncate">{badge.label}</span>
+          </div>
+          <div className={`mt-3 flex ${sparklineTone} lg:justify-end`}>
+            <Sparkline values={deal.price_history_7d} />
+          </div>
+          <a href={deal.deeplink_url} target="_blank" rel="noopener noreferrer" className="mt-4 block">
+            <Button variant="primary" className="h-9 w-full rounded-lg font-600 lg:ml-auto lg:max-w-[190px]">
+              Reservar
+            </Button>
+          </a>
+          <div
+            className={`mt-2 text-xs ${deal.booking_source === 'direct_airline' ? 'text-success' : 'text-text-muted'}`}
+          >
+            {footerSource} · {formatDistanceToNowStrict(new Date(deal.fare_last_seen_at), { locale: ptBR })}
+          </div>
         </div>
       </div>
-    </Card>
+    </article>
   );
 };

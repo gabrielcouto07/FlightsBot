@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '../components/layout/Layout';
-import { Card, Table, Button, EmptyState } from '../components/ui';
+import { Card, Button, EmptyState } from '../components/ui';
 import { alertsAPI, UserAlert } from '../api/alerts';
 
 export const AlertsManager = () => {

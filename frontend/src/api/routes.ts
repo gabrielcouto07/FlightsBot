@@ -10,10 +10,15 @@ export interface Route {
   updated_at: string;
 }
 
+interface RouteListResponse {
+  total: number;
+  routes: Route[];
+}
+
 export const routesAPI = {
   listRoutes: async (): Promise<Route[]> => {
-    const response = await apiClient.get<Route[]>('/api/routes');
-    return response.data;
+    const response = await apiClient.get<RouteListResponse>('/api/routes');
+    return response.data.routes;
   },
 
   getRoute: async (routeId: string): Promise<Route> => {

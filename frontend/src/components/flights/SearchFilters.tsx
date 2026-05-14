@@ -1,7 +1,15 @@
-import { useState } from 'react';
-import { Input, Select, Button } from '../ui';
-import { Card } from '../ui';
-import { Search } from 'lucide-react';
+import { FormEvent, useMemo, useState } from 'react';
+import { Filter, Search, SlidersHorizontal } from 'lucide-react';
+
+import { Button, Input, Select } from '../ui';
+import {
+  airlinePresets,
+  airportOptions,
+  budgetPresets,
+  featuredRoutes,
+  popularDestinations,
+  popularOrigins,
+} from '../../lib/airports';
 
 interface SearchFiltersProps {
   onSearch: (filters: SearchFiltersType) => void;
@@ -16,108 +24,216 @@ export interface SearchFiltersType {
   max_price: number;
   trip_type: 'oneway' | 'roundtrip';
   adults: number;
+  airline: string;
   limit: number;
 }
 
-const MAJOR_AIRPORTS = [
-  { value: 'GRU', label: 'São Paulo (GRU)' },
-  { value: 'SDU', label: 'Rio de Janeiro (SDU)' },
-  { value: 'MIA', label: 'Miami (MIA)' },
-  { value: 'LIS', label: 'Lisbon (LIS)' },
-  { value: 'BCN', label: 'Barcelona (BCN)' },
-  { value: 'NYC', label: 'New York (NYC)' },
-  { value: 'LHR', label: 'London (LHR)' },
-];
+export const defaultSearchFilters: SearchFiltersType = {
+  fly_from: 'GRU',
+  fly_to: 'anywhere',
+  date_from: new Date().toISOString().split('T')[0],
+  date_to: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+  max_price: 900,
+  trip_type: 'oneway',
+  adults: 1,
+  airline: 'ALL',
+  limit: 12,
+};
 
-export const SearchFilters = ({ onSearch, isLoading }: SearchFiltersProps) => {
-  const [filters, setFilters] = useState<SearchFiltersType>({
-    fly_from: 'GRU',
-    fly_to: 'anywhere',
-    date_from: new Date().toISOString().split('T')[0],
-    date_to: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    max_price: 5000,
-    trip_type: 'oneway',
-    adults: 1,
-    limit: 20,
-  });
+const airportLookup = new Map(
+  airportOptions.flatMap((airport) => [
+    [airport.code.toUpperCase(), airport.code],
+    [`${airport.city} (${airport.code})`.toUpperCase(), airport.code],
+  ])
+);
 
-  const handleChange = (field: keyof SearchFiltersType, value: any) => {
-    setFilters({ ...filters, [field]: value });
+const parseAirportValue = (value: string) => {
+  const normalized = value.trim().toUpperCase();
+  if (!normalized) {
+    return '';
+  }
+
+  const explicitCode = normalized.match(/\(([A-Z]{3})\)$/);
+  if (explicitCode) {
+    return explicitCode[1];
+  }
+
+  if (normalized === 'ANYWHERE') {
+    return 'anywhere';
+  }
+
+  return airportLookup.get(normalized) ?? normalized.slice(0, 3);
+};
+
+export const SearchFilters = ({ onSearch, isLoading = false }: SearchFiltersProps) => {
+  const [filters, setFilters] = useState<SearchFiltersType>(defaultSearchFilters);
+  const [originInput, setOriginInput] = useState(defaultSearchFilters.fly_from);
+  const [destinationInput, setDestinationInput] = useState(defaultSearchFilters.fly_to.toUpperCase());
+
+  const airportHints = useMemo(
+    () =>
+      airportOptions.map((airport) => `${airport.city} (${airport.code})`),
+    []
+  );
+
+  const update = (patch: Partial<SearchFiltersType>) => {
+    setFilters((current) => ({ ...current, ...patch }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSearch(filters);
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    onSearch({
+      ...filters,
+      fly_from: parseAirportValue(originInput),
+      fly_to: parseAirportValue(destinationInput),
+    });
+  };
+
+  const applyScenario = (index: number) => {
+    const route = featuredRoutes[index % featuredRoutes.length];
+    const next = {
+      ...filters,
+      fly_from: route.fly_from,
+      fly_to: route.fly_to,
+      max_price: route.max_price,
+    };
+    setFilters(next);
+    setOriginInput(route.fly_from);
+    setDestinationInput(route.fly_to.toUpperCase());
+    onSearch(next);
   };
 
   return (
-    <Card className="space-y-4">
-      <h3 className="text-lg font-semibold">Search Flights</h3>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Select
-            label="From"
-            options={MAJOR_AIRPORTS}
-            value={filters.fly_from}
-            onChange={(e) => handleChange('fly_from', e.target.value)}
-          />
-          <Select
-            label="To"
-            options={[
-              { value: 'anywhere', label: 'Anywhere' },
-              ...MAJOR_AIRPORTS,
-            ]}
-            value={filters.fly_to}
-            onChange={(e) => handleChange('fly_to', e.target.value)}
-          />
+    <div className="sticky top-[5.1rem] z-30 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border-primary bg-gradient-to-r from-bg-secondary/80 to-bg-tertiary/50 px-4 py-3 backdrop-blur-md">
+        <div className="flex items-center gap-2.5 text-xs font-600 uppercase tracking-wider text-text-tertiary">
+          <Filter size={16} className="text-accent" strokeWidth={2} />
+          Filtros Rápidos
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Depart"
-            type="date"
-            value={filters.date_from}
-            onChange={(e) => handleChange('date_from', e.target.value)}
-          />
-          <Input
-            label="Return"
-            type="date"
-            value={filters.date_to}
-            onChange={(e) => handleChange('date_to', e.target.value)}
-          />
+        <div className="flex flex-wrap gap-2">
+          {featuredRoutes.map((route, index) => (
+            <button
+              key={route.label}
+              type="button"
+              onClick={() => applyScenario(index)}
+              className="rounded-lg border border-border-primary bg-bg-tertiary px-3 py-1.5 text-xs font-500 text-text-secondary transition-all duration-200 hover:border-accent/50 hover:bg-accent/10 hover:text-accent"
+            >
+              {route.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <Select
-            label="Trip Type"
-            options={[
-              { value: 'oneway', label: 'One-way' },
-              { value: 'roundtrip', label: 'Roundtrip' },
-            ]}
-            value={filters.trip_type}
-            onChange={(e) => handleChange('trip_type', e.target.value as 'oneway' | 'roundtrip')}
-          />
-          <Input
-            label="Passengers"
-            type="number"
-            min="1"
-            max="9"
-            value={filters.adults}
-            onChange={(e) => handleChange('adults', parseInt(e.target.value))}
-          />
-          <Input
-            label="Max Price"
-            type="number"
-            value={filters.max_price}
-            onChange={(e) => handleChange('max_price', parseFloat(e.target.value))}
-          />
+      <form
+        onSubmit={handleSubmit}
+        className="grid gap-3 rounded-xl border border-border-primary bg-gradient-to-br from-bg-secondary/40 to-bg-tertiary/40 p-5 backdrop-blur-md shadow-lg xl:grid-cols-[1.1fr_1.1fr_0.9fr_0.9fr_0.9fr_0.8fr_0.65fr_auto]"
+      >
+        <Input
+          label="Origin"
+          value={originInput}
+          list="origin-airports"
+          placeholder="GRU or Sao Paulo"
+          onChange={(event) => setOriginInput(event.target.value)}
+        />
+        <Input
+          label="Destination"
+          value={destinationInput}
+          list="destination-airports"
+          placeholder="Anywhere or MIA"
+          onChange={(event) => setDestinationInput(event.target.value)}
+        />
+        <Input
+          label="Window Start"
+          type="date"
+          value={filters.date_from}
+          onChange={(event) => update({ date_from: event.target.value })}
+        />
+        <Input
+          label="Window End"
+          type="date"
+          value={filters.date_to}
+          onChange={(event) => update({ date_to: event.target.value })}
+        />
+        <Input
+          label="Max Price"
+          type="number"
+          min="100"
+          value={filters.max_price}
+          onChange={(event) => update({ max_price: Number(event.target.value || 0) })}
+          helpText={budgetPresets.map((value) => `R$${value}`).join(' / ')}
+        />
+        <Select
+          label="Airline"
+          value={filters.airline}
+          options={airlinePresets.map((code) => ({
+            value: code,
+            label: code === 'ALL' ? 'All carriers' : code,
+          }))}
+          onChange={(event) => update({ airline: event.target.value })}
+        />
+        <Input
+          label="Passengers"
+          type="number"
+          min="1"
+          max="9"
+          value={filters.adults}
+          onChange={(event) => update({ adults: Number(event.target.value || 1) })}
+        />
+        <div className="flex items-end gap-2">
+          <Button type="submit" variant="primary" size="md" isLoading={isLoading} className="w-full">
+            <Search size={16} strokeWidth={2} />
+            Search
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="md"
+            className="px-4"
+            onClick={() => {
+              setFilters(defaultSearchFilters);
+              setOriginInput(defaultSearchFilters.fly_from);
+              setDestinationInput(defaultSearchFilters.fly_to.toUpperCase());
+              onSearch(defaultSearchFilters);
+            }}
+          >
+            <SlidersHorizontal size={16} strokeWidth={2} />
+          </Button>
         </div>
-
-        <Button type="submit" variant="primary" size="md" isLoading={isLoading} className="w-full">
-          <Search size={18} />
-          Search Deals
-        </Button>
+        <datalist id="origin-airports">
+          {airportHints.map((airport) => (
+            <option key={airport} value={airport} />
+          ))}
+        </datalist>
+        <datalist id="destination-airports">
+          <option value="Anywhere" />
+          {airportHints.map((airport) => (
+            <option key={airport} value={airport} />
+          ))}
+        </datalist>
       </form>
-    </Card>
+
+      <div className="flex flex-wrap gap-2">
+        {popularOrigins.map((origin) => (
+          <button
+            key={origin}
+            type="button"
+            onClick={() => setOriginInput(origin)}
+            className="rounded-lg border border-border-primary bg-bg-secondary px-3 py-1.5 text-xs font-500 text-text-secondary transition-all duration-200 hover:border-accent/50 hover:bg-accent/10 hover:text-accent"
+          >
+            {origin}
+          </button>
+        ))}
+        {popularDestinations.map((destination) => (
+          <button
+            key={destination}
+            type="button"
+            onClick={() => setDestinationInput(destination.toUpperCase())}
+            className="rounded-lg border border-border-primary bg-bg-secondary px-3 py-1.5 text-xs font-500 text-text-secondary transition-all duration-200 hover:border-accent/50 hover:bg-accent/10 hover:text-accent"
+          >
+            {destination.toUpperCase()}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
