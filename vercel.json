@@ -11,13 +11,5 @@
       "src": "/(.*)",
       "dest": "app/main.py"
     }
-  ],
-  "env": {
-    "KIWI_API_KEY": "@kiwi_api_key",
-    "EVOLUTION_API_URL": "@evolution_api_url",
-    "EVOLUTION_API_KEY": "@evolution_api_key",
-    "FREE_GROUP_JID": "@free_group_jid",
-    "DEMO_MODE": "true",
-    "WHATSAPP_ENABLED": "false"
-  }
+  ]
 }
