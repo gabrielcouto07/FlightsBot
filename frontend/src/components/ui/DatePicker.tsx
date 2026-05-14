@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import * as Popover from '@radix-ui/react-popover';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ptBR } from 'date-fns/locale';
 import {
   addDays,
@@ -57,6 +56,7 @@ export const DatePicker = ({
   disabled = false,
 }: DatePickerProps) => {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const selectedDate = value ? startOfDay(new Date(`${value}T00:00:00`)) : null;
   const minSelectableDate = minDate
     ? startOfDay(new Date(`${minDate}T00:00:00`))
@@ -67,38 +67,43 @@ export const DatePicker = ({
   const endDate = rangeEnd ? startOfDay(new Date(`${rangeEnd}T00:00:00`)) : null;
   const days = useMemo(() => buildCalendarDays(visibleMonth), [visibleMonth]);
 
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, []);
+
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <div ref={rootRef} className="relative">
       <div>
         <label className="mb-2 block text-[13px] font-medium text-secondary">{label}</label>
-        <Popover.Trigger asChild>
-          <button
-            type="button"
-            disabled={disabled}
-            className={`flex h-12 w-full items-center justify-between rounded-xl border bg-bg-quaternary px-4 text-left transition-[border-color,box-shadow] duration-150 ${
-              disabled
-                ? 'cursor-not-allowed border-border-primary text-faint opacity-70'
-                : 'border-border-primary text-primary hover:border-border-secondary focus-visible:border-teal focus-visible:shadow-[0_0_0_2px_rgba(88,166,255,0.15)]'
-            }`}
-          >
-            <span className={`flex items-center gap-3 text-sm ${value ? 'text-primary' : 'text-faint'}`}>
-              <CalendarDays size={16} className="text-secondary" />
-              <span className="truncate font-medium">
-                {value
-                  ? format(new Date(`${value}T00:00:00`), "EEE, d 'de' MMM", { locale: ptBR })
-                  : 'Selecionar data'}
-              </span>
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => setOpen((current) => !current)}
+          className={`flex h-12 w-full items-center justify-between rounded-xl border bg-bg-quaternary px-4 text-left transition-[border-color,box-shadow] duration-150 ${
+            disabled
+              ? 'cursor-not-allowed border-border-primary text-faint opacity-70'
+              : 'border-border-primary text-primary hover:border-border-secondary focus-visible:border-teal focus-visible:shadow-[0_0_0_2px_rgba(88,166,255,0.15)]'
+          }`}
+        >
+          <span className={`flex items-center gap-3 text-sm ${value ? 'text-primary' : 'text-faint'}`}>
+            <CalendarDays size={16} className="text-secondary" />
+            <span className="truncate font-medium">
+              {value
+                ? format(new Date(`${value}T00:00:00`), "EEE, d 'de' MMM", { locale: ptBR })
+                : 'Selecionar data'}
             </span>
-          </button>
-        </Popover.Trigger>
+          </span>
+        </button>
 
-        <Popover.Portal>
-          <Popover.Content
-            sideOffset={10}
-            align="start"
-            data-state={open ? 'open' : 'closed'}
-            className="popover-panel z-40 w-[304px] rounded-2xl border border-border-primary bg-bg-tertiary p-4 shadow-lg"
-          >
+        {open ? (
+          <div className="mt-2 w-full rounded-2xl border border-border-primary bg-bg-tertiary p-4 shadow-lg">
             <div className="flex items-center justify-between">
               <button
                 type="button"
@@ -164,9 +169,9 @@ export const DatePicker = ({
                 );
               })}
             </div>
-          </Popover.Content>
-        </Popover.Portal>
+          </div>
+        ) : null}
       </div>
-    </Popover.Root>
+    </div>
   );
 };

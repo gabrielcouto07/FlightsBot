@@ -103,7 +103,7 @@ export const DealsExplorer = () => {
               </Button>
             </div>
           ) : isLoading ? (
-            <section className="grid gap-4 lg:grid-cols-2">
+            <section className="mx-auto grid w-full max-w-5xl gap-4">
               {[1, 2, 3, 4].map((item) => (
                 <DealCardSkeleton key={item} />
               ))}
@@ -118,7 +118,7 @@ export const DealsExplorer = () => {
               </Button>
             </div>
           ) : (
-            <section className="results-grid grid gap-4 lg:grid-cols-2">
+            <section className="results-grid mx-auto grid w-full max-w-5xl gap-4">
               {deals.map((deal) => (
                 <DealCard key={getDealKey(deal)} deal={deal} />
               ))}

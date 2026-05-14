@@ -80,9 +80,9 @@ export const DealCard = ({ deal }: DealCardProps) => {
     deal.stops === 0 ? 'Direto' : `${deal.stops} escala${deal.stops > 1 ? 's' : ''}`;
 
   return (
-    <article className="rounded-xl border border-border-primary bg-gradient-to-br from-bg-secondary to-bg-tertiary p-5 transition-all duration-300 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10 hover:-translate-y-0.5">
-      <div className="grid gap-5 lg:grid-cols-[20%_45%_35%] lg:items-center">
-        <div className="flex min-w-0 items-center gap-3 lg:items-start">
+    <article className="w-full rounded-xl border border-border-primary bg-gradient-to-br from-bg-secondary to-bg-tertiary p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/10">
+      <div className="grid gap-5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
+        <div className="flex min-w-0 items-center gap-3 lg:items-center">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-quaternary border border-border-primary text-xs font-600 text-text-primary">
             {!logoFailed && deal.airline_logo_url ? (
               <img
@@ -102,8 +102,8 @@ export const DealCard = ({ deal }: DealCardProps) => {
           </div>
         </div>
 
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-lg font-700 text-text-primary">
+        <div className="min-w-0 text-center lg:text-left">
+          <div className="flex items-center justify-center gap-2 text-lg font-700 text-text-primary lg:justify-start">
             <span>{deal.origin}</span>
             <ArrowRight size={16} className="shrink-0 text-text-secondary" strokeWidth={2.5} />
             <span>{deal.destination}</span>
@@ -120,13 +120,13 @@ export const DealCard = ({ deal }: DealCardProps) => {
           </div>
         </div>
 
-        <div className="min-w-0 lg:text-right">
+        <div className="min-w-0 text-center lg:text-right">
           <div className="text-2xl font-700 text-accent">{formatCurrency(deal.price)}</div>
           <div className={`mt-2 inline-flex max-w-full items-center gap-1.5 text-xs font-500 ${badge.tone}`}>
             {badge.icon}
             <span className="truncate">{badge.label}</span>
           </div>
-          <div className={`mt-3 flex ${sparklineTone} lg:justify-end`}>
+          <div className={`mt-3 flex justify-center ${sparklineTone} lg:justify-end`}>
             <Sparkline values={deal.price_history_7d} />
           </div>
           <a href={deal.deeplink_url} target="_blank" rel="noopener noreferrer" className="mt-4 block">
