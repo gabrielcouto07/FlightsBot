@@ -1,5 +1,10 @@
 {
   "version": 2,
+  "env": {
+    "DATABASE_URL": "sqlite+aiosqlite:////tmp/flight_bot.db",
+    "DEMO_MODE": "true",
+    "WHATSAPP_ENABLED": "false"
+  },
   "builds": [
     {
       "src": "app/main.py",
