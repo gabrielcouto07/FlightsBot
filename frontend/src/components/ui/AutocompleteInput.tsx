@@ -141,6 +141,15 @@ export const AutocompleteInput = ({
           document.body
         )}
 
+      {/* Spacer to push form content down while dropdown (rendered in portal) is open */}
+      {isOpen && filteredOptions.length > 0 && (
+        <div
+          aria-hidden
+          style={{ height: `${Math.min(filteredOptions.length * 44, 240)}px` }}
+          className="w-full pointer-events-none"
+        />
+      )}
+
       {error && <span className="text-xs text-danger font-500">{error}</span>}
     </div>
   );
