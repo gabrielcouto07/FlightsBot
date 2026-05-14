@@ -54,6 +54,14 @@ export const AutocompleteInput = ({
   const updateCoords = () => {
     const el = inputRef.current;
     if (!el) return;
+    // Anchor dropdown to closest form so it appears below the whole form (prevents overlap)
+    const form = el.closest('form') as HTMLElement | null;
+    if (form) {
+      const rect = form.getBoundingClientRect();
+      setCoords({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
+      return;
+    }
+
     const rect = el.getBoundingClientRect();
     setCoords({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
   };
@@ -111,7 +119,7 @@ export const AutocompleteInput = ({
         createPortal(
           <div
             ref={dropdownRef}
-            style={{ position: 'absolute', top: coords.top, left: coords.left, width: coords.width }}
+            style={{ position: 'absolute', top: coords.top, left: coords.left, width: coords.width, zIndex: 2147483647 }}
             className="rounded-lg border border-accent/30 bg-gradient-to-b from-bg-secondary to-bg-tertiary shadow-lg overflow-hidden"
           >
             <div className="max-h-[240px] overflow-y-auto">
