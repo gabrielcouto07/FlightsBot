@@ -331,7 +331,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 ### 2. Install Dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements-backend.txt
 ```
 
 ### 3. Set Up Database
@@ -354,6 +354,12 @@ streamlit run streamlit_app.py
 ```
 
 For Streamlit Community Cloud deployment, see `STREAMLIT_DEPLOY.md`.
+
+If you want the Streamlit panel dependencies locally, install:
+
+```bash
+pip install -r requirements.txt
+```
 
 ---
 
@@ -413,7 +419,8 @@ flight-bot/
 │       └── 001_initial_schema.py
 │
 ├── .env.example                  # Environment template
-├── requirements.txt              # Python dependencies
+├── requirements.txt              # Streamlit app dependencies
+├── requirements-backend.txt      # FastAPI/backend dependencies
 ├── Dockerfile                    # Container image
 ├── docker-compose.yml            # Multi-container setup
 ├── alembic.ini                   # Alembic configuration

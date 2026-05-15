@@ -54,7 +54,9 @@ Se o backend já expõe `/api` no fim da URL, o app remove esse sufixo automatic
 - `streamlit_app.py`: entrypoint do app
 - `.streamlit/config.toml`: configuração global do Streamlit
 - `.streamlit/secrets.toml.example`: modelo dos secrets
-- `requirements.txt`: dependências Python
+- `requirements.txt`: dependências do app Streamlit
+- `requirements-backend.txt`: dependências exclusivas do backend FastAPI
+- `packages.txt`: dependências Linux opcionais para builds nativos
 
 ## Observações importantes
 
@@ -62,6 +64,7 @@ Se o backend já expõe `/api` no fim da URL, o app remove esse sufixo automatic
 - O arquivo `.streamlit/config.toml` precisa ficar na raiz do projeto.
 - Não comite `.streamlit/secrets.toml`.
 - O app abre mesmo se o backend estiver offline, mas exibirá aviso de conectividade.
+- O `requirements.txt` da raiz foi mantido enxuto de propósito para o Cloud não instalar dependências do backend.
 
 ## Teste local
 
