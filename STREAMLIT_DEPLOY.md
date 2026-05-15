@@ -56,7 +56,6 @@ Se o backend já expõe `/api` no fim da URL, o app remove esse sufixo automatic
 - `.streamlit/secrets.toml.example`: modelo dos secrets
 - `requirements.txt`: dependências do app Streamlit
 - `requirements-backend.txt`: dependências exclusivas do backend FastAPI
-- `packages.txt`: dependências Linux opcionais para builds nativos
 
 ## Observações importantes
 
@@ -65,6 +64,7 @@ Se o backend já expõe `/api` no fim da URL, o app remove esse sufixo automatic
 - Não comite `.streamlit/secrets.toml`.
 - O app abre mesmo se o backend estiver offline, mas exibirá aviso de conectividade.
 - O `requirements.txt` da raiz foi mantido enxuto de propósito para o Cloud não instalar dependências do backend.
+- Este app Streamlit nao precisa de `packages.txt`; remover esse arquivo evita conflitos de `apt` no Community Cloud.
 
 ## Teste local
 

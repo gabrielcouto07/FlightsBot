@@ -1,7 +1,0 @@
-build-essential
-zlib1g-dev
-libjpeg-dev
-libfreetype6-dev
-libopenjp2-7-dev
-libtiff5-dev
-pkg-config
