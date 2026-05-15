@@ -38,9 +38,12 @@ services:
     working_dir: /app
     ports:
       - "8501:8501"
+    environment:
+      - BACKEND_BASE_URL=http://app:8000
+      - REQUEST_TIMEOUT_SECONDS=15
     command: >
-      bash -c "pip install -q streamlit pandas plotly requests &&
-               streamlit run admin/streamlit_app.py"
+      bash -c "pip install -q -r requirements.txt &&
+               streamlit run streamlit_app.py --server.address 0.0.0.0"
     volumes:
       - .:/app
     depends_on:

@@ -1,1 +1,4 @@
-from admin.streamlit_app import *  # noqa: F401,F403
+from admin.streamlit_app import main
+
+
+main()

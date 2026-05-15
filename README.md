@@ -350,8 +350,10 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ### 5. Run Admin Dashboard
 
 ```bash
-streamlit run admin/streamlit_app.py
+streamlit run streamlit_app.py
 ```
+
+For Streamlit Community Cloud deployment, see `STREAMLIT_DEPLOY.md`.
 
 ---
 
