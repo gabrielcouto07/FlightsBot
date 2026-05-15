@@ -13,7 +13,7 @@ from streamlit.errors import StreamlitSecretNotFoundError
 from app.utils.airports import get_all_airports
 
 APP_TITLE = "FlightsBot Console"
-DEFAULT_BACKEND_BASE_URL = "http://localhost:8000"
+DEFAULT_BACKEND_BASE_URL = ""
 DEFAULT_TIMEOUT_SECONDS = 15
 
 
@@ -37,10 +37,15 @@ def _read_secret(name: str, default: Optional[str] = None) -> Optional[str]:
 def get_backend_base_url() -> str:
     """Resolve the backend base URL without an /api suffix."""
     raw_value = (
-        _read_secret("BACKEND_BASE_URL")
+        st.session_state.get("backend_base_url_override")
+        or _read_secret("BACKEND_BASE_URL")
         or _read_secret("API_URL")
         or DEFAULT_BACKEND_BASE_URL
-    ).strip()
+    )
+    raw_value = str(raw_value or "").strip()
+
+    if not raw_value:
+        return ""
 
     normalized = raw_value.rstrip("/")
     if normalized.endswith("/api"):
@@ -51,11 +56,15 @@ def get_backend_base_url() -> str:
 
 def get_api_base_url() -> str:
     """Return the backend API base URL."""
+    if not get_backend_base_url():
+        return ""
     return f"{get_backend_base_url()}/api"
 
 
 def get_health_url() -> str:
     """Return the health check endpoint."""
+    if not get_backend_base_url():
+        return ""
     return f"{get_backend_base_url()}/health"
 
 
@@ -141,6 +150,12 @@ def request_json(
     json_body: Optional[dict[str, Any]] = None,
 ) -> Any:
     """Send an HTTP request to the backend and return JSON."""
+    if not get_backend_base_url():
+        raise RuntimeError(
+            "Backend nao configurado. Defina `BACKEND_BASE_URL` nos secrets "
+            "ou informe uma URL temporaria na barra lateral."
+        )
+
     url = f"{get_api_base_url()}{path}"
 
     try:
@@ -166,6 +181,9 @@ def request_json(
 @st.cache_data(ttl=30, show_spinner=False)
 def fetch_health() -> dict[str, Any]:
     """Fetch backend health."""
+    if not get_backend_base_url():
+        return {"status": "not_configured"}
+
     try:
         with build_client() as client:
             response = client.get(get_health_url())
@@ -229,6 +247,14 @@ def render_backend_banner() -> None:
     health = fetch_health()
     status = str(health.get("status", "offline")).lower()
 
+    if status == "not_configured":
+        st.info(
+            "Configure a URL do backend para ativar o painel. "
+            "Voce pode definir `BACKEND_BASE_URL` nos secrets do Streamlit "
+            "ou informar uma URL temporaria na barra lateral."
+        )
+        return
+
     if status == "healthy":
         st.success(f"Backend conectado em `{get_backend_base_url()}`.")
         return
@@ -236,7 +262,7 @@ def render_backend_banner() -> None:
     detail = health.get("error") or "Sem resposta do endpoint /health."
     st.warning(
         "O painel abriu, mas o backend nao respondeu. "
-        "Defina `BACKEND_BASE_URL` nos secrets antes do deploy final.\n\n"
+        "Verifique `BACKEND_BASE_URL` nos secrets ou teste uma URL temporaria.\n\n"
         f"Detalhe: `{detail}`"
     )
 
@@ -249,11 +275,24 @@ def render_sidebar() -> str:
 
         health = fetch_health()
         status = str(health.get("status", "offline")).lower()
+        current_backend = get_backend_base_url()
         st.markdown("### Status")
-        st.write(f"Backend: `{get_backend_base_url()}`")
-        st.write(f"API: `{get_api_base_url()}`")
+        st.write(f"Backend: `{current_backend or 'nao configurado'}`")
+        st.write(f"API: `{get_api_base_url() or 'nao configurada'}`")
         st.write(f"Timeout: `{get_timeout_seconds()}s`")
         st.write(f"Health: `{status}`")
+
+        override_value = st.text_input(
+            "URL temporaria do backend",
+            value=st.session_state.get("backend_base_url_override", ""),
+            placeholder="https://seu-backend.exemplo.com",
+            help="Use para testar uma URL de backend sem editar os secrets do app.",
+        )
+        normalized_override = override_value.strip()
+        if normalized_override != st.session_state.get("backend_base_url_override", ""):
+            st.session_state["backend_base_url_override"] = normalized_override
+            clear_cached_api_data()
+            rerun_app()
 
         if st.button("Limpar cache", use_container_width=True):
             clear_cached_api_data()
