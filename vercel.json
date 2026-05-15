@@ -6,11 +6,6 @@
     "DEMO_MODE": "true",
     "WHATSAPP_ENABLED": "false"
   },
-  "functions": {
-    "app/main.py": {
-      "excludeFiles": "{frontend/**,admin/**,.streamlit/**,__pycache__/**,migrations/**,Dockerfile,docker-compose.yml,README.md,STREAMLIT_DEPLOY.md,VERCEL_BACKEND_DEPLOY.md,flight_bot.db,requirements.txt,requirements-backend.txt}"
-    }
-  },
   "builds": [
     {
       "src": "app/main.py",
