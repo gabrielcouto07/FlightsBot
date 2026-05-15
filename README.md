@@ -354,6 +354,7 @@ streamlit run streamlit_app.py
 ```
 
 For Streamlit Community Cloud deployment, see `STREAMLIT_DEPLOY.md`.
+For a Vercel backend deployment, see `VERCEL_BACKEND_DEPLOY.md`.
 
 If you want the Streamlit panel dependencies locally, install:
 
@@ -421,9 +422,11 @@ flight-bot/
 ├── .env.example                  # Environment template
 ├── requirements.txt              # Streamlit app dependencies
 ├── requirements-backend.txt      # FastAPI/backend dependencies
+├── requirements-vercel.txt       # Backend dependencies for Vercel
 ├── Dockerfile                    # Container image
 ├── docker-compose.yml            # Multi-container setup
 ├── alembic.ini                   # Alembic configuration
+├── VERCEL_BACKEND_DEPLOY.md      # Vercel backend deployment guide
 └── README.md                     # This file
 ```
 

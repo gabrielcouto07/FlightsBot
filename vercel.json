@@ -1,9 +1,15 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "env": {
     "DATABASE_URL": "sqlite+aiosqlite:////tmp/flight_bot.db",
     "DEMO_MODE": "true",
     "WHATSAPP_ENABLED": "false"
+  },
+  "functions": {
+    "app/main.py": {
+      "excludeFiles": "{frontend/**,admin/**,.streamlit/**,__pycache__/**,migrations/**,Dockerfile,docker-compose.yml,README.md,STREAMLIT_DEPLOY.md,VERCEL_BACKEND_DEPLOY.md,flight_bot.db,requirements.txt,requirements-backend.txt}"
+    }
   },
   "builds": [
     {
