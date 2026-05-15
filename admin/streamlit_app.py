@@ -1,5 +1,7 @@
 """Streamlit admin dashboard for Flight Bot"""
 
+import os
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -23,14 +25,17 @@ page = st.sidebar.radio(
     ["🗺️ Rotas", "👥 Usuários", "📊 Histórico de Preços", "📨 Alertas Enviados", "⚙️ Configurações"],
 )
 
-# API base URL (adjust as needed)
-API_URL = "http://localhost:8000/api"
+# API base URL.
+# Streamlit Cloud can use the deployed backend by default, while local runs
+# still work with a localhost override.
+API_URL = os.getenv("API_URL", "https://flights-bot-cwv7.vercel.app").rstrip("/") + "/api"
+REQUEST_TIMEOUT_SECONDS = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "15"))
 
 
 def get_routes_data():
     """Fetch routes from API"""
     try:
-        response = requests.get(f"{API_URL}/routes?limit=1000")
+        response = requests.get(f"{API_URL}/routes?limit=1000", timeout=REQUEST_TIMEOUT_SECONDS)
         if response.status_code == 200:
             return response.json()
     except Exception as e:
@@ -44,7 +49,7 @@ def get_users_data(plan=None):
         url = f"{API_URL}/users?limit=1000"
         if plan:
             url += f"&plan={plan}"
-        response = requests.get(url)
+        response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
         if response.status_code == 200:
             return response.json()
     except Exception as e:
@@ -58,7 +63,7 @@ def get_alerts_data(user_id=None):
         url = f"{API_URL}/alerts?limit=1000"
         if user_id:
             url += f"&user_id={user_id}"
-        response = requests.get(url)
+        response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
         if response.status_code == 200:
             return response.json()
     except Exception as e:
@@ -97,7 +102,11 @@ if page == "🗺️ Rotas":
                             "destination_iata": destination,
                             "threshold_price": threshold,
                         }
-                        response = requests.post(f"{API_URL}/routes", json=payload)
+                        response = requests.post(
+                            f"{API_URL}/routes",
+                            json=payload,
+                            timeout=REQUEST_TIMEOUT_SECONDS,
+                        )
                         if response.status_code == 200:
                             st.success(f"Rota {origin}-{destination} criada com sucesso!")
                             st.session_state.show_new_route = False
@@ -151,7 +160,11 @@ elif page == "👥 Usuários":
                             "name": name,
                             "plan": plan,
                         }
-                        response = requests.post(f"{API_URL}/users", json=payload)
+                        response = requests.post(
+                            f"{API_URL}/users",
+                            json=payload,
+                            timeout=REQUEST_TIMEOUT_SECONDS,
+                        )
                         if response.status_code == 200:
                             st.success(f"Usuário {phone} criado com sucesso!")
                             st.session_state.show_new_user = False
